@@ -18,6 +18,109 @@ def get_bs(sym, tf, macd_min=60):
 def pct(a, b):
     return (a/b - 1) * 100
 
+def generate_daily_check():
+    """
+    Midnight check — 00:00 UTC
+    Prices + MA200 trend + S/R levels for BTC, ETH, SOL.
+    Сигнали: дивергенції (1d/1w), пересічення MA50/MA200, пробиття опору/підтримки (2+ торк.).
+    Якщо сигналу немає — суха статистика.
+    """
+    now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+    lines = ["🦊 CRYPTOFOX — Щоденний огляд", f"📅 {now}", "━"*30, ""]
+    
+    signals_found = []
+    
+    for sym in ["BTCUSDT", "ETHUSDT", "SOLUSDT"]:
+        c, h, l, v = ta.fetch_klines(sym, "1d", 201)
+        last = c[-1]
+        ma50 = ta.ema(c, 50)
+        ma200 = ta.ema(c, 200)
+        trend = "🟢 BULLISH" if last > ma200 else "🔴 BEARISH"
+        name = sym.replace("USDT", "")
+        
+        lines.append(f"{name}: ${last:,.2f}")
+        lines.append(f"  MA200: ${ma200:,.2f} | {trend}")
+        
+        # ── Check MA50/MA200 cross ──
+        if ma50 and ma200:
+            prev_ma50 = ta.ema(c[:-1], 50) if len(c) >= 201 else None
+            prev_ma200 = ta.ema(c[:-1], 200) if len(c) >= 201 else None
+            if prev_ma50 and prev_ma200:
+                if prev_ma50 <= prev_ma200 and ma50 > ma200:
+                    signals_found.append((name, "🟢 GOLDEN CROSS (MA50×MA200)"))
+                    lines.append(f"  🟢 GOLDEN CROSS — MA50 перетнула MA200 вгору!")
+                elif prev_ma50 >= prev_ma200 and ma50 < ma200:
+                    signals_found.append((name, "🔴 DEATH CROSS (MA50×MA200)"))
+                    lines.append(f"  🔴 DEATH CROSS — MA50 перетнула MA200 вниз!")
+                elif ma50 > ma200:
+                    lines.append(f"  MA50: ${ma50:,.2f} 🟢 Вище MA200")
+                else:
+                    lines.append(f"  MA50: ${ma50:,.2f} 🔴 Нижче MA200")
+        
+        # ── Check NEW divergences on 1d (last 5 bars) ──
+        bs_d = ta.find_breakout_signal(c, h, l)
+        if bs_d and bs_d.get("broke_out"):
+            entry_bar = bs_d.get("entry_bar", 0)
+            if entry_bar >= len(c) - 5:
+                dc = bs_d.get("div_count", 1)
+                tag = "🔥🔥🔥 TRIPLE" if dc >= 3 else "🔥🔥 DOUBLE" if dc >= 2 else "🔥"
+                signals_found.append((name, f"Дивергенція 1d ({dc}x)"))
+                lines.append(f"  {tag} НОВА дивергенція 1d ({dc}x) — Вхід: ${bs_d['signal_high']:,.2f}")
+        
+        # ── Check NEW divergences on 1w ──
+        cw, hw, lw, vw = ta.fetch_klines(sym, "1w", 100)
+        bs_w = ta.find_breakout_signal(cw, hw, lw, 30)
+        if bs_w and bs_w.get("broke_out"):
+            entry_bar = bs_w.get("entry_bar", 0)
+            if entry_bar >= len(cw) - 3:
+                dc = bs_w.get("div_count", 1)
+                tag = "🔥🔥🔥 TRIPLE" if dc >= 3 else "🔥🔥 DOUBLE" if dc >= 2 else "🔥"
+                signals_found.append((name, f"Дивергенція 1w ({dc}x)"))
+                lines.append(f"  {tag} НОВА дивергенція 1w ({dc}x) — Вхід: ${bs_w['signal_high']:,.2f}")
+        
+        # ── Volume ──
+        avg_v = sum(v[-50:])/50
+        ratio = v[-1]/avg_v if avg_v > 0 else 0
+        vol_emoji = "📈" if ratio > 1.5 else "📊" if ratio > 0.5 else "📉"
+        lines.append(f"  Об'єм: {vol_emoji} {ratio:.2f}x")
+        
+        # ── Support & Resistance levels ──
+        sr = ta.find_support_resistance(h, l, c)
+        
+        # Check for breakouts of strong levels (3+ touches)
+        for r in sr["resistance"]:
+            if r["touches"] >= 3 and last > r["price"]:
+                signals_found.append((name, f"🟢 Пробиття опору ${r['price']:,.2f} ({r['touches']} торк.)"))
+                lines.append(f"  🟢 ПРОБИТТЯ ОПОРУ: ${r['price']:,.2f} ({r['touches']} дотиків)")
+        for s in sr["support"]:
+            if s["touches"] >= 3 and last < s["price"]:
+                signals_found.append((name, f"🔴 Пробиття підтримки ${s['price']:,.2f} ({s['touches']} торк.)"))
+                lines.append(f"  🔴 ПРОБИТТЯ ПІДТРИМКИ: ${s['price']:,.2f} ({s['touches']} дотиків)")
+        
+        # Show nearest S/R levels (numbered, touches in brackets)
+        r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(sr["resistance"][:3])])
+        s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(sr["support"][:3])])
+        if r_str:
+            lines.append(f"  🔺 Опір: {r_str}")
+        if s_str:
+            lines.append(f"  🔻 Підтр: {s_str}")
+        
+        lines.append("")
+    
+    if signals_found:
+        lines.append("━"*30)
+        lines.append("📡 АКТИВНІ СИГНАЛИ:")
+        for name, sig in signals_found:
+            lines.append(f"  {name}: {sig}")
+        lines.append("")
+    else:
+        lines.append("📊 Сигналів немає. Ринок спокійний.")
+        lines.append("")
+
+    lines.extend(["━"*30, "🦊 CryptoFox — t.me/cryprofoxs"])
+    return "\n".join(lines)
+
+
 def generate_x_post():
     now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
     lines = [f"🦊 #CryptoFox Daily — {now}", ""]
@@ -119,7 +222,9 @@ def generate_tg_post():
 
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "x"
-    if mode == "x":
+    if mode == "check":
+        print(generate_daily_check())
+    elif mode == "x":
         print(generate_x_post())
     elif mode == "tg":
         print(generate_tg_post())

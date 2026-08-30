@@ -9,16 +9,23 @@
 - **ACP агент:** CRYPTOFOX (ID: 01a02f4c-3e1b-792b-b0d0-2c3317370414)
 - **EVM гаманець:** 0xeb7389978aaf4011e988a455805f0a7a89a7224a
 - **Solana гаманець:** A9npAXFUbewZban2EQzhbf5rrECAAGqVRihEHxDnPfgk
-- **Підписанти:** 3 (ACP_ONLY політика), всі працюють
-- **Offering:** "Macro Trading Signals by CRYPTOFOX" — $0.10 за сигнал, SLA 6 годин
+- **Підписанти:** 3 (unrestricted політика), всі працюють
+- **Offering:** "cryptofoxs" — $0.10/сигнал + premium $1/30днів
+- **Слухач подій:** запущено (events listen --all, data/events.jsonl)
 
-### Правила входу/виходу CryptoFox (оновлено 28.08.2026)
+### Правила входу/виходу CryptoFox (оновлено 29.08.2026)
 
 **Пріоритети сигналів:**
 - P1: Weekly breakout (regular div + first AO bar + пробій хаю) — головний
 - P2: Daily breakout (те саме на денному)
 - P3: Volume & trend health (підтвердження, exhaustion)
 - P4: MA50/MA200 (контекст)
+
+**Ризик-менеджмент:**
+- Макс ризик на 1 позицію: 5% капіталу
+- Макс позицій у портфелі: 3
+- Макс загальний ризик портфеля: 15%
+- Важливий контроль втрат, а не об'єм позиції
 
 **Пірамідінг (Дракенміллер):**
 - Probe: 5-10% — regular div + перший AO стовпець
@@ -38,11 +45,23 @@
 
 **Тільки 1d/1w** таймфрейми
 
+### Формат ACP сигналу
+- Deliverable: JSON з direction, asset, entry, stop_loss, take_profit, conviction, macro_rationale
+- Тільки англійською
+- S/R рівні: мінімум 3 торки за 100 днів
+- Дивергенція: тільки якщо є, не згадувати відсутність
+- Основна структура: MA trend, ключові S/R, volume, режим (RISK-ON/OFF/TRANSITION)
+
+## Крон-завдання (в OpenClaw)
+- **trading-cycle**: 0 0,12 * * * (00:00 та 12:00 UTC)
+- О 00:00 → запустити `python3 daily_post.py check` і відправити в @cryprofoxs
+- О 12:00 → ігнорувати (не робити нічого)
+
 ## Що залишилося
-1. ✅ Offering створено (ціна $0.10, SLA 6h)
+1. ✅ Offering створено (cryptofoxs, $0.10/сигнал + premium $1/30днів)
 2. ✅ Аутентифікація на Virtuals
-3. ✅ Signer затверджений
+3. ✅ Signer (unrestricted)
 4. ❌ ETH на Base для газу (потрібно $1-2)
-5. ⏳ Слухач подій (events listen)
-6. ⏳ DegenClaw реєстрація
+5. ✅ Слухач подій (events listen, працює)
+6. ❌ DegenClaw реєстрація (заблоковано — v2 сирий, проблема з Privy гаманцем)
 7. ⏳ Демо-сигнал для Lumier

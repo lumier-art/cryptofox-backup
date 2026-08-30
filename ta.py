@@ -681,7 +681,105 @@ def analyze(symbol, interval="1d", limit=200):
     print(f"\n{'='*60}\n")
 
 
+def find_support_resistance(highs, lows, closes, lookback=120, min_touches=3, cluster_pct=0.015):
+    """
+    Find key support and resistance levels from candle data.
+    
+    Args:
+        highs: list of high prices (most recent last)
+        lows: list of low prices (most recent last)
+        closes: list of close prices (most recent last)
+        lookback: number of candles to analyze (default 100)
+        min_touches: minimum touches for a level (default 1)
+        cluster_pct: merge levels within this %% distance (default 1.5%%)
+    
+    Returns:
+        dict with 'support' and 'resistance' lists of sorted levels
+    """
+    if len(highs) < lookback:
+        lookback = len(highs) - 1
+    
+    h = highs[-lookback:]
+    l = lows[-lookback:]
+    c = closes[-lookback:]
+    current_price = c[-1]
+    
+    # Find swing highs (resistance) — local maxima with 3-bar window
+    swing_highs = []
+    for i in range(2, len(h) - 2):
+        if h[i] > h[i-1] and h[i] > h[i-2] and h[i] >= h[i+1] and h[i] >= h[i+2]:
+            swing_highs.append(h[i])
+    
+    # Find swing lows (support) — local minima with 3-bar window
+    swing_lows = []
+    for i in range(2, len(l) - 2):
+        if l[i] < l[i-1] and l[i] < l[i-2] and l[i] <= l[i+1] and l[i] <= l[i+2]:
+            swing_lows.append(l[i])
+    
+    # Also add long wicks (rejection from a level)
+    for i in range(1, len(c) - 1):
+        upper_wick = h[i] - max(c[i], c[i-1])
+        lower_wick = min(c[i], c[i-1]) - l[i]
+        body = abs(c[i] - c[i-1])
+        if body > 0 and upper_wick > body * 2.0:
+            swing_highs.append(h[i])
+        if body > 0 and lower_wick > body * 2.0:
+            swing_lows.append(l[i])
+    
+    def cluster_levels(values, pct):
+        if not values:
+            return []
+        sorted_vals = sorted(values)
+        clusters = [[sorted_vals[0]]]
+        for v in sorted_vals[1:]:
+            if abs(v - clusters[-1][0]) / clusters[-1][0] < pct:
+                clusters[-1].append(v)
+            else:
+                clusters.append([v])
+        result = []
+        for cl in clusters:
+            if len(cl) >= min_touches:
+                result.append({
+                    "price": round(sum(cl) / len(cl), 2),
+                    "touches": len(cl)
+                })
+        return result
+    
+    resistances = cluster_levels(swing_highs, cluster_pct)
+    supports = cluster_levels(swing_lows, cluster_pct)
+    
+    # Filter: resistance above current, support below current
+    # Keep only nearest 5 on each side, sorted by distance
+    resistances = sorted([r for r in resistances if r["price"] > current_price], key=lambda x: x["price"])[:5]
+    supports = sorted([s for s in supports if s["price"] < current_price], key=lambda x: -x["price"])[:5]
+    
+    return {
+        "support": supports,
+        "resistance": resistances,
+        "current_price": current_price
+    }
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "sr":
+        sym = sys.argv[2] if len(sys.argv) > 2 else "BTCUSDT"
+        c, h, l, v = fetch_klines(sym, "1d", 150)
+        sr = find_support_resistance(h, l, c)
+        print(f"\n{'='*60}")
+        print(f"  SUPPORT & RESISTANCE — {sym}")
+        print(f"  Current: \${sr['current_price']:,.2f}")
+        print(f"{'='*60}")
+        print(f"\n  RESISTANCE:")
+        for i, r in enumerate(sr['resistance'][:5], 1):
+            dist = (r['price'] / sr['current_price'] - 1) * 100
+            print(f"    R{i}: \${r['price']:,.2f}  ({dist:+.2f}%)  [{r['touches']} торк.]")
+        print(f"\n  SUPPORT:")
+        for i, s in enumerate(sr['support'][:5], 1):
+            dist = (s['price'] / sr['current_price'] - 1) * 100
+            print(f"    S{i}: \${s['price']:,.2f}  ({dist:+.2f}%)  [{s['touches']} торк.]")
+        print()
+        sys.exit(0)
+
     sym = sys.argv[1] if len(sys.argv) > 1 else "BTCUSDT"
     iv = sys.argv[2] if len(sys.argv) > 2 else "1d"
     lim = int(sys.argv[3]) if len(sys.argv) > 3 else 200

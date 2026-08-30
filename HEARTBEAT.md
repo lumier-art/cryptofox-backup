@@ -1,9 +1,16 @@
 # Heartbeat tasks — run every 24h
 
-## Daily market scan + post (07:00 UTC)
-Task: Check all signals on 1d/1w, identify new breakout entries, and post to @cryprofoxs
-Run: python3 /home/node/.openclaw/workspace/daily_post.py tg (generate), then post to @cryprofoxs
-Entry logic: Check for first green AO bar after divergence on closed candle → compute BUY STOP level above candle high
+## Daily night check (00:00 UTC only)
+Task: Prices + MA200 trend only for BTC, ETH, SOL. Dry stats. No signal analysis unless NEW signal in last 3 bars.
+Run: python3 /home/node/.openclaw/workspace/daily_post.py check
+Post to: @cryprofoxs
+Note: Якщо сигналу немає — просто ціна + BULLISH/BEARISH відносно MA200. Ніяких розписів.
+Priority: high
+
+## 12:00 UTC — Нічого не робити
+
+## Daily TG post (07:00 UTC)
+Run: python3 /home/node/.openclaw/workspace/daily_post.py tg (generate) → post to @cryprofoxs
 Note: 7:00 UTC = 14:00 MYT
 Priority: high
 
@@ -13,8 +20,8 @@ Task: Post daily market overview to @Cryptofoxel
 Status: Awaiting billing setup on developer.x.com
 Priority: medium
 
-## Daily GitHub backup
-Run: source /home/node/.openclaw/workspace/.github-backup.env && bash /home/node/.openclaw/workspace/github-backup.sh
-Task: Push MEMORY.md, ta.py, SOUL.md, config.json to github.com/gigavers3/cryptofox-backup
+## Daily GitHub backup (00:00 UTC)
+Run: bash -c 'set -a; source /home/node/.openclaw/workspace/.github-backup.env; set +a; bash /home/node/.openclaw/workspace/github-backup.sh'
+Task: Push workspace files to github.com/gigavers3/cryptofox-backup if changed
 Output: Silent — only logs on failure.
 Priority: medium
