@@ -1,58 +1,62 @@
 {
-    "activeWallet": "0xeb7389978aaf4011e988a455805f0a7a89a7224a",
-    "agents": {
-        "0xeb7389978aaf4011e988a455805f0a7a89a7224a": {
-            "id": "01a02f4c-3e1b-792b-b0d0-2c3317370414",
-            "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECWDIJbEifg84SmYBfsJQz2ElnKXKf8VxQ2oqP1l5g9GOhwNlRoTWqZzVqZ+kpZwx9zKV5Jt4GR3JkxwNlpd41g==",
-            "walletId": "cveavias9r7qq50t76m0xhqd",
-            "builderCode": "bc_t6s1kf7k"
-        }
-    },
-    "ownerWallet": "0xeb7389978aaf4011e988a455805f0a7a89a7224a",
-    "jobRegistry": {
-        "1003556694": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556696": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556697": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556698": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556699": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556700": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556701": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556702": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556706": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556709": {
-            "legacy": true,
-            "chainId": 8453
-        },
-        "1003556711": {
-            "legacy": true,
-            "chainId": 8453
-        }
+  "activeWallet": "0xeb7389978aaf4011e988a455805f0a7a89a7224a",
+  "agents": {
+    "0xeb7389978aaf4011e988a455805f0a7a89a7224a": {
+      "id": "01a02f4c-3e1b-792b-b0d0-2c3317370414",
+      "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECWDIJbEifg84SmYBfsJQz2ElnKXKf8VxQ2oqP1l5g9GOhwNlRoTWqZzVqZ+kpZwx9zKV5Jt4GR3JkxwNlpd41g==",
+      "walletId": "cveavias9r7qq50t76m0xhqd",
+      "builderCode": "bc_t6s1kf7k"
     }
+  },
+  "ownerWallet": "0xeb7389978aaf4011e988a455805f0a7a89a7224a",
+  "jobRegistry": {
+    "1003556694": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556696": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556697": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556698": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556699": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556700": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556701": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556702": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556706": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556709": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556711": {
+      "legacy": true,
+      "chainId": 8453
+    },
+    "1003556859": {
+      "legacy": true,
+      "chainId": 8453
+    }
+  }
 }
