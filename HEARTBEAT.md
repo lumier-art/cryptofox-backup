@@ -1,15 +1,25 @@
 # Heartbeat tasks — run every 24h
 
 ## Daily night check (00:00 UTC only)
-Task: Prices + MA200 trend only for BTC, ETH, SOL. Dry stats. No signal analysis unless NEW signal in last 3 bars.
-Run: python3 /home/node/.openclaw/workspace/daily_post.py check
-Post to: @cryprofoxs
-Note: Якщо сигналу немає — просто ціна + BULLISH/BEARISH відносно MA200. Ніяких розписів.
+Task: Повний аналіз 4 активів (BTC, ETH, SOL, PENGU) — такий самий формат як TG.
+  - Режим ринку (RISK-ON/OFF/TRANSITION)
+  - По кожному: тренд (MA200 + %), MA50/MA200, об'єм, S/R рівні
+  - Дивергенції: ТІЛЬКИ НОВІ (1d ≤ 5 bars, 1w ≤ 3 bars). Старі не згадувати.
+  - Свіжі Golden/Death Cross — показувати.
+  - Вердикт + рекомендація
+Run: python3 /home/node/.openclaw/workspace/daily_post.py check → post to @cryprofoxs
 Priority: high
 
 ## 12:00 UTC — Нічого не робити
 
 ## Daily TG post (07:00 UTC)
+Task: Повний аналіз 4 активів (BTC, ETH, SOL, PENGU).
+  - Тренд (MA200 + %)
+  - MA50/MA200 (Golden/Death Cross, або вище/нижче)
+  - Об'єм (відносно 50d середнього)
+  - Рівні S/R (топ-3 з кількістю дотиків)
+  - Дивергенції: ВСІ (і старі, і нові) — це повний звіт
+  - Вердикт + рекомендація
 Run: python3 /home/node/.openclaw/workspace/daily_post.py tg (generate) → post to @cryprofoxs
 Note: 7:00 UTC = 14:00 MYT
 Priority: high
