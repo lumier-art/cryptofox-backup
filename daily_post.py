@@ -13,7 +13,7 @@ ASSETS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "AVAXUSDT", "DOGEUSDT", "LINKUSDT", "
 CORE = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "PENGUUSDT"]
 
 def get_bs(sym, tf, macd_min=60):
-    c, h, l, _ = ta.fetch_klines(sym, tf, 200)
+    c, h, l, _ = ta.fetch_klines(sym, tf, 500)
     return c, ta.find_breakout_signal(c, h, l, macd_min)
 
 def pct(a, b):
@@ -21,7 +21,7 @@ def pct(a, b):
 
 def asset_analysis(sym, tf="1d"):
     """Return full analysis dict for an asset."""
-    c, h, l, v = ta.fetch_klines(sym, tf, 201)
+    c, h, l, v = ta.fetch_klines(sym, tf, 500)
     last = c[-1]
     ma50 = ta.ema(c, 50) or 0
     ma200 = ta.ema(c, 200) or 0
@@ -33,8 +33,8 @@ def asset_analysis(sym, tf="1d"):
     pct_ma200 = pct(last, ma200) if ma200 else 0
     
     # Golden/death cross
-    prev_ma50 = ta.ema(c[:-1], 50) if len(c) >= 201 else None
-    prev_ma200 = ta.ema(c[:-1], 200) if len(c) >= 201 else None
+    prev_ma50 = ta.ema(c[:-1], 50) if len(c) >= 200 else None
+    prev_ma200 = ta.ema(c[:-1], 200) if len(c) >= 200 else None
     cross = None
     if prev_ma50 and prev_ma200 and ma50 and ma200:
         if prev_ma50 <= prev_ma200 and ma50 > ma200:
