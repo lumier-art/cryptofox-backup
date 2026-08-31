@@ -179,11 +179,6 @@ def generate_daily_check():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.0f} | Стоп: ${a['div_d']['stop']:,.0f}")
         has_new_signal = True
-    # Hidden divergence
-    if a["hidden_d"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1d) + об'єм — сигнал до пірамідінгу")
-    elif a["hidden_d"]:
-        lines.append(f"👀 Прихована дивергенція (1d) — об'єм низький, чекати підтвердження")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -218,10 +213,6 @@ def generate_daily_check():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.0f} | Стоп: ${a['div_d']['stop']:,.0f}")
         has_new_signal = True
-    if a["hidden_d"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1d) + об'єм — сигнал до пірамідінгу")
-    elif a["hidden_d"]:
-        lines.append(f"👀 Прихована дивергенція (1d) — об'єм низький, чекати підтвердження")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -253,10 +244,6 @@ def generate_daily_check():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.2f} | Стоп: ${a['div_d']['stop']:,.2f}")
         has_new_signal = True
-    if a["hidden_d"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1d) + об'єм — сигнал до пірамідінгу")
-    elif a["hidden_d"]:
-        lines.append(f"👀 Прихована дивергенція (1d) — об'єм низький, чекати підтвердження")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -293,10 +280,6 @@ def generate_daily_check():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.4f} | Стоп: ${a['div_d']['stop']:,.4f}")
         has_new_signal = True
-    if a["hidden_d"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1d) + об'єм — сигнал до пірамідінгу")
-    elif a["hidden_d"]:
-        lines.append(f"👀 Прихована дивергенція (1d) — об'єм низький, чекати підтвердження")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.4f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.4f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -372,16 +355,6 @@ def generate_tg_post():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.0f} | Стоп: ${a['div_d']['stop']:,.0f}")
     
-    # Hidden divergence
-    if a["hidden_d"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1d) + об'єм — пірамідінг")
-    elif a["hidden_d"]:
-        lines.append(f"👀 Прихована дивергенція (1d) — об'єм низький")
-    if a["hidden_w"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1w) + об'єм — пірамідінг")
-    elif a["hidden_w"]:
-        lines.append(f"👀 Прихована дивергенція (1w) — об'єм низький")
-    
     # S/R
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
@@ -413,15 +386,6 @@ def generate_tg_post():
         dc = a["div_d"]["count"]
         lines.append(f"🔥 Сигнал: денна дивергенція ({dc}x) — ${a['div_d']['entry']:,.0f} → ${a['price']:,.0f}")
     
-    if a["hidden_d"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1d) + об'єм — пірамідінг")
-    elif a["hidden_d"]:
-        lines.append(f"👀 Прихована дивергенція (1d) — об'єм низький")
-    if a["hidden_w"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1w) + об'єм — пірамідінг")
-    elif a["hidden_w"]:
-        lines.append(f"👀 Прихована дивергенція (1w) — об'єм низький")
-    
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -449,15 +413,6 @@ def generate_tg_post():
     if a["div_d"]:
         dc = a["div_d"]["count"]
         lines.append(f"🔥 Сигнал: денна дивергенція ({dc}x) — ${a['div_d']['entry']:,.2f} → ${a['price']:,.2f}")
-    
-    if a["hidden_d"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1d) + об'єм — пірамідінг")
-    elif a["hidden_d"]:
-        lines.append(f"👀 Прихована дивергенція (1d) — об'єм низький")
-    if a["hidden_w"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1w) + об'єм — пірамідінг")
-    elif a["hidden_w"]:
-        lines.append(f"👀 Прихована дивергенція (1w) — об'єм низький")
     
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
@@ -490,15 +445,6 @@ def generate_tg_post():
     if a["div_d"]:
         dc = a["div_d"]["count"]
         lines.append(f"🔥 Сигнал: денна дивергенція ({dc}x) — ${a['div_d']['entry']:,.4f} → ${a['price']:,.4f}")
-    
-    if a["hidden_d"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1d) + об'єм — пірамідінг")
-    elif a["hidden_d"]:
-        lines.append(f"👀 Прихована дивергенція (1d) — об'єм низький")
-    if a["hidden_w"] and a["vol_ratio"] > 1.0:
-        lines.append(f"🔵 Прихована дивергенція (1w) + об'єм — пірамідінг")
-    elif a["hidden_w"]:
-        lines.append(f"👀 Прихована дивергенція (1w) — об'єм низький")
     
     r_str = " | ".join([f"R{i+1} ${r['price']:,.4f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.4f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
@@ -560,10 +506,6 @@ def generate_x_post():
             lines.append(f"  Weekly div {a['div_w']['count']}x (entry ${a['div_w']['entry']:,.2f})")
         if a["div_d"]:
             lines.append(f"  Daily div {a['div_d']['count']}x (entry ${a['div_d']['entry']:,.2f})")
-        if a["hidden_d"]:
-            lines.append(f"  Hidden div 1d — pyramiding")
-        if a["hidden_w"]:
-            lines.append(f"  Hidden div 1w — pyramiding")
     
     lines.append("")
     lines.extend(["#Crypto #Trading #BTC #Macro", "t.me/cryprofoxs"])
