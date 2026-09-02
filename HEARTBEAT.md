@@ -24,17 +24,10 @@ Run: python3 /home/node/.openclaw/workspace/daily_post.py tg (generate) → post
 Note: 7:00 UTC = 14:00 MYT
 Priority: high
 
-## Daily NFT scan (07:00 UTC)
-Task: Сканувати Robinhood Chain на нові NFT проекти. Зібрати:
-  - Свіжі free mint проекти (Twitter)
-  - NFT Calendar дропи
-  - OpenSea trending
-  - Оцінити кожен за системою score_project()
-  - Відправити звіт Lumier
-Run: web_search + nft_scanner.py → python3 nft_scanner.py check
-Output: Повний звіт з оцінкою 🟢STRONG/🟡WATCH/🔴WEAK
-Cron: ✅ nft-scan (0 7 * * * exact) — активний
-Priority: high
+## Daily NFT scan (07:00 UTC) — ❌ ВИМКНЕНО
+Task: Прибрано за запитом Lumier.
+Cron: ❌ nft-scan (0 7 * * * exact) — вимкнено
+Priority: none
 
 ## Daily X post (15:00 UTC) — pending card payment
 Run: python3 /home/node/.openclaw/workspace/daily_post.py x | xurl post
