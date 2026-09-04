@@ -5,7 +5,7 @@ MACD divergence (1d/1w only) + AO confirmation + Volume + MA trend filter.
 Priority system:
   P1: Weekly breakout signal (regular divergence + first AO bar + breakout)
   P2: Daily breakout signal (regular divergence + first AO bar + breakout)
-  P3: Volume & trend health (confirmation / exhaustion)
+  P3: Volume & trend health + CVD (confirmation / exhaustion / delta)
   P4: MA50/MA200 trend (golden/death cross)
 """
 
@@ -505,6 +505,23 @@ def analyze(symbol, interval="1d", limit=200):
     elif vol_ratio < 0.5:
         print(f"  Low volume")
 
+    # --- CVD (CUMULATIVE VOLUME DELTA) ---
+    print(f"\n  ─── CVD (CUMULATIVE VOLUME DELTA) ───")
+    cvd = cvd_profile(closes, highs, lows, volumes)
+    print(f"  Raw Delta (last bar): {cvd['raw_delta']:+,.0f}")
+    if cvd['smoothed'] is not None:
+        print(f"  CVD Smoothed (EMA-9): {cvd['smoothed']:+,.0f}")
+    print(f"  CVD Momentum: {cvd['momentum'] or 'N/A'}")
+    print(f"  CVD Cumulative: {cvd['cumulative']:+,.0f}")
+    div_strs = {
+        "bullish": "🟢 BULLISH DIVERGENCE — price down, CVD up = accumulation",
+        "bearish": "🔴 BEARISH DIVERGENCE — price up, CVD down = weakening",
+        "bullish_confirmation": "🟢 CVD CONFIRMS UPTREND — price & CVD both up",
+        "bearish_confirmation": "🔴 CVD CONFIRMS DOWNTREND — price & CVD both down",
+        "none": "⚪ Insufficient data for CVD divergence"
+    }
+    print(f"  CVD Divergence: {div_strs.get(cvd['divergence'], cvd['divergence'])}")
+
     # --- SUPPORT / RESISTANCE ---
     print(f"\n  ─── SUPPORT / RESISTANCE ───")
     lookback = min(100, len(lows))
@@ -634,6 +651,15 @@ def analyze(symbol, interval="1d", limit=200):
             elif exhaustion < 0.8:
                 print(f"  👀 Volume declining ({exhaustion:.1f}x vs prev 20)")
 
+    # CVD signal in P3 context
+    cvd_div = cvd.get('divergence', 'none')
+    if cvd_div == 'bullish' and vol_ratio > 0.9:
+        print(f"  🟢 CVD bullish divergence + healthy volume — accumulation underway")
+    elif cvd_div == 'bearish':
+        print(f"  🔴 CVD bearish divergence — price rise not confirmed by volume delta")
+        if vol_ratio < 1.0:
+            print(f"     ➡ Low volume too ({vol_ratio:.2f}x) — exhaustion risk high")
+
     # AO momentum check
     if ao is not None and ao_prev is not None:
         if ao < 0 and ao > ao_prev:
@@ -679,6 +705,88 @@ def analyze(symbol, interval="1d", limit=200):
         print(f"  Insufficient data")
 
     print(f"\n{'='*60}\n")
+
+
+# ─── CUMULATIVE VOLUME DELTA (CVD) ───
+
+def cvd_profile(closes, highs, lows, volumes, lookback=50):
+    """
+    Approximate CVD from OHLCV candles.
+    For each candle, estimate buy/sell pressure using close position in range.
+    Returns dict with raw delta, smoothed line, and divergence signal.
+    """
+    if len(closes) < lookback:
+        lookback = len(closes)
+
+    cvd_vals = []
+    for i in range(-lookback, 0):
+        rng = highs[i] - lows[i]
+        if rng == 0:
+            cvd_vals.append(0)
+            continue
+        # Close relative to range → buy/sell ratio
+        pos = (closes[i] - lows[i]) / rng  # 0 = closed at low, 1 = closed at high
+        # Directional volume: buys = vol * pos, sells = vol * (1 - pos)
+        buys = volumes[i] * pos
+        sells = volumes[i] * (1 - pos)
+        delta = buys - sells
+        cvd_vals.append(delta)
+
+    # Cumulative sum
+    cumulative = []
+    running = 0.0
+    for d in cvd_vals:
+        running += d
+        cumulative.append(running)
+
+    # Smoothed CVD line (EMA-9 for signal)
+    smoothed = []
+    if len(cumulative) >= 9:
+        mult = 2 / (9 + 1)
+        sm = sum(cumulative[:9]) / 9
+        smoothed.append(sm)
+        for v in cumulative[9:]:
+            sm = (v - sm) * mult + sm
+            smoothed.append(sm)
+
+    # Current delta (raw for last bar)
+    latest_raw = cvd_vals[-1] if cvd_vals else 0
+    latest_smooth = smoothed[-1] if smoothed else None
+    prev_smooth = smoothed[-2] if smoothed and len(smoothed) > 1 else None
+
+    # CVD momentum
+    momentum = None
+    if latest_smooth is not None and prev_smooth is not None:
+        momentum = "RISING" if latest_smooth > prev_smooth else "FALLING"
+
+    # CVD divergence vs price
+    divergence = "none"
+    if len(closes) >= lookback and lookback >= 20:
+        # Check last 10-20 bars for CVD/price divergence
+        price_start = closes[-lookback]
+        price_now = closes[-1]
+        cvd_start = cumulative[0] if cumulative else 0
+        cvd_now = cumulative[-1] if cumulative else 0
+
+        price_up = price_now > price_start
+        cvd_up = cvd_now > cvd_start
+
+        if price_up and not cvd_up:
+            divergence = "bearish"  # price up, CVD down = weakening
+        elif not price_up and cvd_up:
+            divergence = "bullish"  # price down, CVD up = accumulation
+        elif price_up and cvd_up:
+            divergence = "bullish_confirmation"
+        else:
+            divergence = "bearish_confirmation"
+
+    return {
+        "raw_delta": latest_raw,
+        "smoothed": latest_smooth,
+        "momentum": momentum,
+        "divergence": divergence,
+        "cumulative": cumulative[-1] if cumulative else 0,
+    }
 
 
 def find_support_resistance(highs, lows, closes, lookback=120, min_touches=3, cluster_pct=0.015):
