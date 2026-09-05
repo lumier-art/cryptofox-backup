@@ -12,6 +12,37 @@ from datetime import datetime, timezone
 ASSETS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "AVAXUSDT", "DOGEUSDT", "LINKUSDT", "BNBUSDT", "VIRTUALUSDT"]
 CORE = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "PENGUUSDT"]
 
+def cvd_context_str(cvd):
+    """Return CVD divergence context line if meaningful."""
+    div = cvd.get('divergence', 'none')
+    mom = cvd.get('momentum', '')
+    if div == 'bullish':
+        return "🟢 CVD: накопичення (ціна ↓ CVD ↑)"
+    elif div == 'bearish':
+        return "🔴 CVD: ослаблення (ціна ↑ CVD ↓)"
+    elif div == 'bullish_confirmation':
+        return "🟢 CVD: підтверджує ріст"
+    elif div == 'bearish_confirmation':
+        return "🔴 CVD: падіння підтверджене"
+    return None
+
+
+def cvd_should_show(a):
+    """CVD показується коли є MACD дивергенція АБО ціна біля S/R рівня."""
+    has_div = a.get("div_w") or a.get("div_d") or a.get("hidden_d") or a.get("hidden_w")
+    if has_div:
+        return True
+    price = a["price"]
+    for r in a.get("sr", {}).get("resistance", [])[:1]:
+        dist = abs(r["price"] - price) / max(price, 0.01) * 100
+        if dist <= 2.0:
+            return True
+    for s in a.get("sr", {}).get("support", [])[:1]:
+        dist = abs(s["price"] - price) / max(price, 0.01) * 100
+        if dist <= 2.0:
+            return True
+    return False
+
 def get_bs(sym, tf, macd_min=60):
     c, h, l, _ = ta.fetch_klines(sym, tf, 500)
     return c, ta.find_breakout_signal(c, h, l, macd_min)
@@ -96,6 +127,9 @@ def asset_analysis(sym, tf="1d"):
             if hw_div and hw_div.get("type") == "bullish_hidden":
                 hidden_w = {"type": "bullish_hidden", "strength": hw_div.get("strength", 0.5)}
     
+    # CVD (для контексту дивергенції)
+    cvd = ta.cvd_profile(c, h, l, v)
+    
     # S/R levels
     sr = ta.find_support_resistance(h, l, c)
     
@@ -113,6 +147,7 @@ def asset_analysis(sym, tf="1d"):
         "div_w": div_w,
         "hidden_d": hidden_d,
         "hidden_w": hidden_w,
+        "cvd": cvd,
     }
 
 def regime_classification():
@@ -179,6 +214,11 @@ def generate_daily_check():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.0f} | Стоп: ${a['div_d']['stop']:,.0f}")
         has_new_signal = True
+    # CVD контекст — дивергенція або пробій рівня
+    if cvd_should_show(a) and a["cvd"]:
+        cvd_s = cvd_context_str(a["cvd"])
+        if cvd_s:
+            lines.append(f"  {cvd_s}")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -213,6 +253,11 @@ def generate_daily_check():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.0f} | Стоп: ${a['div_d']['stop']:,.0f}")
         has_new_signal = True
+    # CVD контекст — дивергенція або пробій рівня
+    if cvd_should_show(a) and a["cvd"]:
+        cvd_s = cvd_context_str(a["cvd"])
+        if cvd_s:
+            lines.append(f"  {cvd_s}")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -244,6 +289,11 @@ def generate_daily_check():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.2f} | Стоп: ${a['div_d']['stop']:,.2f}")
         has_new_signal = True
+    # CVD контекст — дивергенція або пробій рівня
+    if cvd_should_show(a) and a["cvd"]:
+        cvd_s = cvd_context_str(a["cvd"])
+        if cvd_s:
+            lines.append(f"  {cvd_s}")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -280,6 +330,11 @@ def generate_daily_check():
         lines.append(f"Сигнал: {tag} денна дивергенція ({dc}x)")
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.4f} | Стоп: ${a['div_d']['stop']:,.4f}")
         has_new_signal = True
+    # CVD контекст — дивергенція або пробій рівня
+    if cvd_should_show(a) and a["cvd"]:
+        cvd_s = cvd_context_str(a["cvd"])
+        if cvd_s:
+            lines.append(f"  {cvd_s}")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.4f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.4f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -356,6 +411,11 @@ def generate_tg_post():
         lines.append(f"  Вхід: ${a['div_d']['entry']:,.0f} | Стоп: ${a['div_d']['stop']:,.0f}")
     
     # S/R
+    # CVD контекст — дивергенція або пробій рівня
+    if cvd_should_show(a) and a["cvd"]:
+        cvd_s = cvd_context_str(a["cvd"])
+        if cvd_s:
+            lines.append(f"  {cvd_s}")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -386,6 +446,11 @@ def generate_tg_post():
         dc = a["div_d"]["count"]
         lines.append(f"🔥 Сигнал: денна дивергенція ({dc}x) — ${a['div_d']['entry']:,.0f} → ${a['price']:,.0f}")
     
+    # CVD контекст — дивергенція або пробій рівня
+    if cvd_should_show(a) and a["cvd"]:
+        cvd_s = cvd_context_str(a["cvd"])
+        if cvd_s:
+            lines.append(f"  {cvd_s}")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -414,6 +479,11 @@ def generate_tg_post():
         dc = a["div_d"]["count"]
         lines.append(f"🔥 Сигнал: денна дивергенція ({dc}x) — ${a['div_d']['entry']:,.2f} → ${a['price']:,.2f}")
     
+    # CVD контекст — дивергенція або пробій рівня
+    if cvd_should_show(a) and a["cvd"]:
+        cvd_s = cvd_context_str(a["cvd"])
+        if cvd_s:
+            lines.append(f"  {cvd_s}")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.0f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.0f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
@@ -446,6 +516,11 @@ def generate_tg_post():
         dc = a["div_d"]["count"]
         lines.append(f"🔥 Сигнал: денна дивергенція ({dc}x) — ${a['div_d']['entry']:,.4f} → ${a['price']:,.4f}")
     
+    # CVD контекст — дивергенція або пробій рівня
+    if cvd_should_show(a) and a["cvd"]:
+        cvd_s = cvd_context_str(a["cvd"])
+        if cvd_s:
+            lines.append(f"  {cvd_s}")
     r_str = " | ".join([f"R{i+1} ${r['price']:,.4f} ({r['touches']}x)" for i, r in enumerate(a["sr"]["resistance"][:3])])
     s_str = " | ".join([f"S{i+1} ${s['price']:,.4f} ({s['touches']}x)" for i, s in enumerate(a["sr"]["support"][:3])])
     if r_str:
