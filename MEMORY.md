@@ -2,7 +2,7 @@
 
 ## Клієнт
 - Ім'я: Lumier (Telegram: @artistlutik)
-- Twitter/X: @lumier_art
+- Twitter/X: @lumier_art ✅
 
 ## Поточний проект — Продаж сигналів на ACP
 

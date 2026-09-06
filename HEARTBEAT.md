@@ -31,7 +31,7 @@ Priority: none
 
 ## Daily X post (15:00 UTC) — pending card payment
 Run: python3 /home/node/.openclaw/workspace/daily_post.py x | xurl post
-Task: Post daily market overview to @Cryptofoxel
+Task: Post daily market overview to @lumier_art
 Status: Awaiting billing setup on developer.x.com
 Priority: medium
 
